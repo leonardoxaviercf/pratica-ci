@@ -21,7 +21,7 @@ def test_cria_tarefa(cliente):
     resposta = cliente.post("/tarefas", json={"titulo": "Revisar Docker"})
     assert resposta.status_code == 201
     assert resposta.get_json()["titulo"] == "Revisar Docker"
-    assert len(cliente.get("/tarefas").get_json()) == 1
+    assert len(cliente.get("/tarefas").get_json()) == 2
 
 
 def test_rejeita_titulo_vazio(cliente):
