@@ -37,8 +37,8 @@ jobs:
       - name: Construir imagem
         run: docker build -t calculadora:ci .
 
-      - name: Subir container
-        run: docker run -d --name calc -p 5000:5000 calculadora:ci
+      - name: Subir container com volume
+        run: docker run -d --name calc -p 5000:5000 -v historico:/dados calculadora:ci
 
       - name: Esperar API
         run: |
