@@ -1,29 +1,32 @@
-import pytest
-
-from app import criar_app
-from repositorio import RepositorioMemoria
+from app import app
 
 
-@pytest.fixture
-def cliente():
-    return criar_app(RepositorioMemoria()).test_client()
+def test_saude():
+    cliente = app.test_client()
+    resposta = cliente.get("/saude")
+    assert resposta.status_code == 200
+    assert resposta.get_json() == {"status": "ok"}
 
 
-def test_saude(cliente):
-    assert cliente.get("/saude").get_json() == {"status": "ok"}
+def test_soma():
+    cliente = app.test_client()
+    resposta = cliente.get("/soma?a=2&b=3")
+    assert resposta.status_code == 200
+    assert resposta.get_json() == {"a": 2.0, "b": 3.0, "resultado": 5.0}
 
 
-def test_lista_comeca_vazia(cliente):
-    assert cliente.get("/tarefas").get_json() == []
+def test_historico_sem_variavel(monkeypatch):
+    monkeypatch.delenv("HISTORICO", raising=False)
+    cliente = app.test_client()
+    cliente.get("/soma?a=2&b=3")
+    resposta = cliente.get("/historico")
+    assert resposta.get_json() == []
 
 
-def test_cria_tarefa(cliente):
-    resposta = cliente.post("/tarefas", json={"titulo": "Revisar Docker"})
-    assert resposta.status_code == 201
-    assert resposta.get_json()["titulo"] == "Revisar Docker"
-    assert len(cliente.get("/tarefas").get_json()) == 1
-
-
-def test_rejeita_titulo_vazio(cliente):
-    resposta = cliente.post("/tarefas", json={"titulo": "   "})
-    assert resposta.status_code == 400
+def test_historico_com_variavel(monkeypatch, tmp_path):
+    arquivo = tmp_path / "historico.log"
+    monkeypatch.setenv("HISTORICO", str(arquivo))
+    cliente = app.test_client()
+    cliente.get("/soma?a=2&b=3")
+    resposta = cliente.get("/historico")
+    assert resposta.get_json() == ["2.0 + 3.0 = 5.0"]
