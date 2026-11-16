@@ -27,3 +27,30 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - run: ruff check .
       - run: pytest -v
+  image:
+    needs: testes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Construir imagem
+        run: docker build -t calculadora:ci .
+
+      - name: Subir container
+        run: docker run -d --name calc -p 5000:5000 calculadora:ci
+
+      - name: Esperar API
+        run: |
+          for i in $(seq 1 15); do
+            curl -fs http://localhost:5000/saude && exit 0
+            sleep 2
+          done
+          exit 1
+       
+      - name: Testar a soma
+        run: curl -fs "http://localhost:5000/soma?a=2&b=3" | grep '"resultado":5.0'
+          
+      - name: Logs do container
+        if: failure()
+        run: docker logs calc
