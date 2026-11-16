@@ -50,6 +50,22 @@ jobs:
        
       - name: Testar a soma
         run: curl -fs "http://localhost:5000/soma?a=2&b=3" | grep '"resultado":5.0'
+
+      - name: Mais duas contas
+        run: |
+          curl -fs "http://localhost:5000/soma?a=10&b=20"
+          curl -fs "http://localhost:5000/soma?a=1.5&b=2.5"
+
+      - name: Exportar o histórico do volume
+        run: |
+          docker run --rm -v historico:/dados alpine \
+            cat /dados/historico.log > historico.log
+
+      - name: Publicar como artefato
+        uses: actions/upload-artifact@v7
+        with:
+          name: historico
+          path: historico.log
           
       - name: Logs do container
         if: failure()
